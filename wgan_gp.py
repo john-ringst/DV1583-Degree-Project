@@ -1,3 +1,5 @@
+# pylint: disable=line-too-long
+# pylint: disable=invalid-name
 """ Generative Adverserial Network using Wasserstein distance and gradient penalty
 implemented according to research by Gulrajani et al. https://arxiv.org/abs/1704.00028 """
 import os
@@ -146,7 +148,128 @@ class WGANGP:
 
     def train(self,
             X: np.ndarray,
-            epochs: int = 2000,
+            generator_iters: int,
             batch_size: int = 256,
-            log_interval: int = 200) -> None:
-        pass
+            log_interval: int = 200,
+            checkpoint_dir: str = None,
+            resume_from: str = None) -> None:
+        """ Training WGAN-GP on a single-label scaled numpy array at a time """
+
+        # data loader
+        tensor_X = torch.tensor(X, dtype=torch.float32).to(self.device)
+        loader = DataLoader(
+            TensorDataset(tensor_X),
+            batch_size=batch_size,
+            shuffle=True,
+            drop_last=True
+        )
+
+        # infinite iterator to go to the next batch, restarting when no more batches
+        def infinite_loader():
+            """ Infinite iterator to go to the next batch, restarting when no more batches """
+            while True:
+                yield from loader
+
+        data_iter = infinite_loader()
+
+        # checkpoint resume point if available
+        start_iter = 0
+        if resume_from is not None and os.path.exists(resume_from):
+            checkpoint = torch.load(resume_from, map_location=self.device)
+            self.generator.load_state_dict(checkpoint['generator'])
+            self.critic.load_state_dict(checkpoint['critic'])
+            self.opt_generator.load_state_dict(checkpoint['opt_generator'])
+            self.opt_critic.load_state_dict(checkpoint['opt_critic'])
+            self.g_losses = checkpoint.get('g_losses', [])
+            self.c_losses = checkpoint.get('c_losses', [])
+            start_iter = checkpoint.get('generator_iter', 0)
+            print(f"  Resumed from checkpoint: {resume_from}")
+            print(f"  Continuing from generator iteration {start_iter}")
+
+        # set networks to training mode
+        self.generator.train()
+        self.critic.train()
+
+        # if no checkpoint directory exists, create it
+        if checkpoint_dir is not None:
+            os.makedirs(checkpoint_dir, exist_ok=True)
+
+        # control prints
+        print(f"  Device          : {self.device}")
+        print(f"  Samples         : {len(X)} | Features: {X.shape[1]}")
+        print(f"  Generator iters : {generator_iters} | Batch size: {batch_size}")
+
+        # training loop begin
+
+        for g_iter in tqdm(range(start_iter, generator_iters), desc=" Training"):
+
+            # critic loss update, update it n_critic times
+            c_loss_accum = 0.0
+
+            for _ in range(self.n_critic):
+                real_batch = next(data_iter)[0]
+                current_batch = real_batch.size(0)
+
+                # generate fake batch (with random noise). detached so gradients don't flow into generator
+                z = torch.randn(current_batch, self.latent_dim, device=self.device)
+                fake_batch = self.generator(z).detach()
+
+                # real batch from dataset, fake batch from generator
+                real_score = self.critic(real_batch).mean()
+                fake_score = self.critic(fake_batch).mean()
+
+                gp = gradient_penalty(
+                    self.critic, real_batch, fake_batch,
+                    self.device, self.lambda_gp
+                )
+
+                # critic wants to maximize (real - fake), minimise ((fake - real) + penalty)
+                c_loss = fake_score - real_score + gp
+
+                # clear old gradients, compute new gradient, apply update to model parameters
+                self.opt_critic.zero_grad()
+                c_loss.backward()
+                self.opt_critic.step()
+
+                # to keep track of average critic loss over updates
+                c_loss_accum += c_loss.item()
+
+            # generate fake batch. do not need to detach in case of the generator
+            z = torch.randn(current_batch, self.latent_dim, device=self.device)
+            fake_batch = self.generator(z)
+
+            # generator wants to get a high score by the critic (pytorch optimizers minimize losses so we need negative sign)
+            g_loss = -self.critic(fake_batch).mean()
+
+            self.opt_generator.zero_grad()
+            g_loss.backward()
+            self.opt_generator.step()
+
+            # append losses to lists initialized outside of training loop
+            self.g_losses.append(g_loss.item())
+            self.c_losses.append(c_loss_accum / self.n_critic)
+
+            # logging
+            if (g_iter + 1) % log_interval == 0:
+                avg_c = sum(self.c_losses[-log_interval:]) / log_interval
+                avg_g = sum(self.g_losses[-log_interval:]) / log_interval
+                print(f" Iteration {g_iter+1:>6}/{generator_iters}")
+                print(f"Critic: {avg_c:+.4f}    Generator: {avg_g:+.4f}")
+
+            # checkpointing
+            if checkpoint_dir is not None and (g_iter + 1) % 2000 == 0:
+                checkpoint_path = os.path.join(
+                    checkpoint_dir, f"checkpoint_iter{g_iter+1}.pt"
+                )
+                torch.save({
+                    "generator_iter" : g_iter + 1,
+                    "generator" : self.generator.state_dict(),
+                    "critic" : self.critic.state_dict(),
+                    "opt_generator" : self.opt_generator.state_dict(),
+                    "opt_critic" : self.opt_critic.state_dict(),
+                    "g_losses" : self.g_losses,
+                    "c_losses" : self.c_losses,
+                }, checkpoint_path)
+                print(f"Checkpoint saved to {checkpoint_path}")
+
+        print("Training completed")
