@@ -273,3 +273,48 @@ class WGANGP:
                 print(f"Checkpoint saved to {checkpoint_path}")
 
         print("Training completed")
+
+    def generate(self, n_samples: int) -> np.ndarray:
+        """ Generate n samples of synthetic rows after training is completed.
+         Returns float32 numpy array """
+
+        # set to evaluation mode from training. generation can use bigger batch size than training.
+        self.generator.eval()
+        generated = []
+        batch_size = 512
+
+        # do not track gradients (save memory). process in batch_size steps. compute where current batch should stop.
+        # create tensor filled with random noise during generation.
+        # convert tensor back to numpy array (which lives in cpu, not gpu)
+        with torch.no_grad():
+            for start in range(0, n_samples, batch_size):
+                end = min(start + batch_size, n_samples)
+                z = torch.randn(end - start, self.latent_dim, device=self.device)
+                batch = self.generator(z).cpu().numpy()
+                generated.append(batch)
+
+        # reset generator back to training mode. basically restore the method.
+        # stack generated batches into one array, convert to float32 and return
+        self.generator.train()
+        return np.vstack(generated).astype(np.float32)
+
+    def plot_losses(self, label: str, save_dir: str) -> None:
+        """ Generate plots to visualize loss curves after training.
+         Save image to save_dir """
+        os.makedirs(save_dir, exist_ok=True)
+
+        fig, ax = plt.subplots(figsize=(10, 4))
+        ax.plot(self.c_losses, label="Critic",    color="steelblue",  linewidth=0.8, alpha=0.9)
+        ax.plot(self.g_losses, label="Generator", color="darkorange", linewidth=0.8, alpha=0.9)
+        ax.axhline(0, color='black', linewidth=0.5, linestyle='--')
+        ax.set_title(f"WGAN-GP Training Losses — {label}")
+        ax.set_xlabel("Generator Iteration")
+        ax.set_ylabel("Loss")
+        ax.legend()
+        fig.tight_layout()
+
+        safe = label.replace(' ', '_').replace('/', '_')
+        path = os.path.join(save_dir, f"{safe}_losses.png")
+        fig.savefig(path, dpi=150)
+        plt.close(fig)
+        print(f"  Loss plot saved → {path}")

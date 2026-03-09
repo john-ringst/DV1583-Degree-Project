@@ -183,3 +183,6 @@ cython_debug/
 # ML datasets
 datasets/
 outputs/
+
+# temp files
+02_wgan_gp.ipynb
