@@ -6,9 +6,11 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import seaborn as sns
 from scipy.stats import ks_2samp
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, recall_score
+from sklearn.utils import resample
 
 import torch
 from torch import nn
@@ -318,3 +320,174 @@ class WGANGP:
         fig.savefig(path, dpi=150)
         plt.close(fig)
         print(f"  Loss plot saved → {path}")
+
+# start value to beat, may be changed
+TSTR_THRESHOLD = 0.55
+N_KS_SUBSAMPLE = 2000
+
+def evaluate_fidelity(X_real: np.ndarray,
+                      X_synth: np.ndarray,
+                      label: str,
+                      feature_names: list[str],
+                      save_dir: str,
+                      df_real_benign: pd.DataFrame,
+                      tstr_threshold: float = TSTR_THRESHOLD,
+                      n_benign: int = 5000) -> tuple[bool, pd.DataFrame, dict]:
+    """ Evaluate fidelity of synthetic data in three categories:
+     Statistical: KS test per feature
+      Visual: KDE overlay plots (plot synthetic and real ontop eachother)
+       Structural: Correlation matrix diff (did synthetic data capture relationships)
+       Utility: TSTR & TRTS (will the synthetic data actually help models) 
+       Returns bool if data passed the fidelity checks and per-feature KS statistics 
+       and dict containing TSTR/TRTS classification report """
+
+    os.makedirs(save_dir, exist_ok=True)
+    safe = label.replace(' ', '_').replace('/', '_')
+    n_features = len(feature_names)
+
+    # kolmogorov-smirnov test: check how similar distributions of a feature are between real & synthetic
+    # gap between two curves, small gap = very similar distributions
+
+    # subsampling first to improve KS sensitivity across all features
+    # KS test is currently too sensitive at large n
+
+    n_ks = min(N_KS_SUBSAMPLE, len(X_real), len(X_synth))
+    rng = np.random.default_rng(77)
+    idx_r = rng.choice(len(X_real), n_ks, replace=False)
+    idx_s = rng.choice(len(X_synth), n_ks, replace=False)
+    X_real_ks = X_real[idx_r]
+    X_synth_ks = X_synth[idx_s]
+
+    ks_rows = []
+    for i, feature in enumerate(feature_names):
+        stat, p_val = ks_2samp(X_real_ks[:, i], X_synth_ks[:, i])
+        ks_rows.append({
+            "Feature" : feature,
+            "KS statistic" : round(stat, 4),
+            "p-value" : round(p_val, 4),
+        })
+
+    ks_report = pd.DataFrame(ks_rows)
+    mean_ks = ks_report["KS statistic"].mean()
+
+    print(f"X_real  dtype: {X_real.dtype}  range: [{X_real.min():.3f}, {X_real.max():.3f}]")
+    print(f"X_synth dtype: {X_synth.dtype} range: [{X_synth.min():.3f}, {X_synth.max():.3f}]")
+    print(f"X_real  sample (first row): {X_real[0]}")
+    print(f"X_synth sample (first row): {X_synth[0]}")
+    print(f"KS running on {n_ks} samples (real: {len(X_real)}, synth: {len(X_synth)})")
+    print(f"Mean KS: {mean_ks:.4f}")
+
+    report_path = os.path.join(save_dir, f"{safe}_ks_report.csv")
+    ks_report.to_csv(report_path, index=False)
+    print(f"KS report saved to {report_path}")
+
+    # KDE plots: kernel density estimate to show distribution difference visually
+    # if curves overlap well: good fidelity
+
+    ncols = 4
+    nrows = int(np.ceil(n_features / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(ncols * 4, nrows * 3))
+    axes = axes.flatten()
+
+    for i, feature in enumerate(feature_names):
+        ax = axes[i]
+        ks_val = ks_report.loc[ks_report["Feature"] == feature, "KS statistic"].values[0]
+
+        sns.kdeplot(X_real[:, i], ax=ax, label="Real",
+                    color="steelblue", fill=True, alpha=0.4, linewidth=1.5)
+        sns.kdeplot(X_synth[:, i], ax=ax, label="Synthetic",
+                    color="darkorange", fill=True, alpha=0.4, linewidth=1.5)
+
+        ax.set_title(f"{feature}\nKS = {ks_val:.3f}", fontsize=8)
+        ax.set_xlabel("")
+        ax.legend(fontsize=7)
+
+    for k in range(n_features, len(axes)):
+        axes[k].set_visible(False)
+
+    fig.suptitle(f"Real vs Synthetic — {label}", fontsize=12, y=1.01)
+    fig.tight_layout()
+    kde_path = os.path.join(save_dir, f"{safe}_kde.png")
+    fig.savefig(kde_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  KDE plot  : {kde_path}")
+
+    # correlation matrices: did the synthetic data capture the correlations between features
+    # values should generally be similar for correlation between real - synthetic
+
+    real_corr = pd.DataFrame(X_real, columns=feature_names).corr()
+    synth_corr = pd.DataFrame(X_synth, columns=feature_names).corr()
+    difference_corr = (real_corr - synth_corr).abs()
+
+    fig, axes = plt.subplots(1, 3, figsize=(21, 6))
+    sns.heatmap(real_corr, ax=axes[0], cmap="coolwarm",
+                vmin=-1, vmax=1, square=True, cbar=True)
+    axes[0].set_title("Real")
+
+    sns.heatmap(synth_corr, ax=axes[1], cmap="coolwarm",
+                vmin=-1, vmax=1, square=True, cbar=True)
+    axes[1].set_title("Synthetic")
+
+    sns.heatmap(difference_corr, ax=axes[2], cmap="coolwarm",
+                vmin=0, vmax=1, square=True, cbar=True)
+    axes[2].set_title("Absolute Difference")
+
+    fig.suptitle(f"Correlations - {label}", fontsize=12)
+    fig.tight_layout()
+    corr_path = os.path.join(save_dir, f"{safe}_correlations.png")
+    fig.savefig(corr_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  Correlation plot  : {corr_path}")
+
+    # tstr: train on synthetic, test on real - does synthetic data capture meaningful patterns
+    # trts: train on real, test on synthetic - do synthetic data look realistic
+
+    df_real_atk = pd.DataFrame(X_real, columns=feature_names).reset_index(drop=True)
+    df_synth_atk = pd.DataFrame(X_synth, columns=feature_names)
+
+    benign_train = resample(df_real_benign, n_samples=n_benign, random_state=77)
+    benign_test = resample(df_real_benign, n_samples=min(n_benign, len(df_real_atk)), random_state=88)
+
+    # tstr
+
+    X_tr = pd.concat([df_synth_atk[feature_names], benign_train[feature_names]], ignore_index=True)
+    y_tr = np.array([1] * len(df_synth_atk) + [0] * len(benign_train))
+    X_te = pd.concat([df_real_atk[feature_names], benign_test[feature_names]], ignore_index=True)
+    y_te = np.array([1] * len(df_real_atk) + [0] * len(benign_test))
+
+    cls_tstr = RandomForestClassifier(n_estimators=100, random_state=77, n_jobs=1)
+    cls_tstr.fit(X_tr, y_tr)
+    y_pred_tstr = cls_tstr.predict(X_te)
+    tstr_recall = recall_score(y_te, y_pred_tstr, pos_label=1)
+    tstr_rep = classification_report(y_te, y_pred_tstr, target_names=["BENIGN", label])
+    print("TSTR: Trained on Synthetic, Tested on Real")
+    print(tstr_rep)
+
+    # trts
+
+    X_tr2 = pd.concat([df_real_atk[feature_names],  benign_train[feature_names]], ignore_index=True)
+    y_tr2 = np.array([1] * len(df_real_atk) + [0] * len(benign_train))
+    X_te2 = pd.concat([df_synth_atk[feature_names], benign_test[feature_names]],  ignore_index=True)
+    y_te2 = np.array([1] * len(df_synth_atk) + [0] * len(benign_test))
+
+    cls_trts    = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+    cls_trts.fit(X_tr2, y_tr2)
+    y_pred_trts  = cls_trts.predict(X_te2)
+    trts_recall  = recall_score(y_te2, y_pred_trts, pos_label=1)
+    trts_rep     = classification_report(y_te2, y_pred_trts, target_names=["BENIGN", label])
+    print("TRTS: Trained on Real, Tested on Synthetic")
+    print(trts_rep)
+
+    passed = tstr_recall >= tstr_threshold
+    status = "Passed" if passed else "Failed"
+    print(f" {status} — TSTR recall: {tstr_recall:.4f} (threshold: {tstr_threshold})")
+    print(f" TRTS recall: {trts_recall:.4f} (informational)")
+
+    tstr_results = {
+        "tstr_recall" : tstr_recall,
+        "trts_recall" : trts_recall,
+        "tstr_report" : tstr_rep,
+        "trts_report" : trts_rep,
+    }
+
+    return passed, ks_report, tstr_results
