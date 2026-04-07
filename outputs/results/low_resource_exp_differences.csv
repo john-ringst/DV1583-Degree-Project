@@ -1,0 +1,9 @@
+Label                    Baseline 1%    Augmented 1%    Change
+─────────────────────────────────────────────────────────────
+DoS GoldenEye  recall    0.9368         0.9893          +0.055
+DoS Hulk       recall    0.9527         0.9502          -0.003
+FTP-Patator    recall    0.9477         0.9865          +0.039
+SSH-Patator    recall    0.8820         0.9037          +0.022
+Brute Force    recall    0.7517         0.6361          -0.116
+XSS            recall    0.1385         0.1385          0.000
+DDoS           recall    0.9986         0.9980          -0.001

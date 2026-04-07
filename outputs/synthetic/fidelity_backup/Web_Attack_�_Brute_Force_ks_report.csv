@@ -1,0 +1,16 @@
+Feature,KS statistic,p-value
+Total Fwd Packets,0.4694,0.0
+Total Length of Fwd Packets,0.8517,0.0
+Fwd Packet Length Max,0.8973,0.0
+Fwd Packet Length Mean,0.8973,0.0
+Bwd Packet Length Max,0.8973,0.0
+Flow Packets/s,0.5796,0.0
+Fwd IAT Std,0.3823,0.0
+Fwd IAT Min,0.8531,0.0
+Fwd Header Length,0.4912,0.0
+Bwd Header Length,0.4735,0.0
+Max Packet Length,0.8973,0.0
+Packet Length Mean,0.8973,0.0
+Packet Length Variance,0.8639,0.0
+Init_Win_bytes_forward,0.0796,0.0002
+Init_Win_bytes_backward,0.1177,0.0

@@ -1,0 +1,112 @@
+Feature,KS statistic,p-value
+Total Fwd Packets,0.98,0.0
+Total Length of Fwd Packets,0.4105,0.0
+Fwd Packet Length Max,0.4995,0.0
+Fwd Packet Length Mean,0.495,0.0
+Bwd Packet Length Max,0.554,0.0
+Flow Packets/s,0.1,0.0
+Fwd IAT Std,0.4065,0.0
+Fwd IAT Min,0.953,0.0
+Fwd Header Length,0.4475,0.0
+Bwd Header Length,0.7545,0.0
+Max Packet Length,0.7345,0.0
+Packet Length Mean,0.3535,0.0
+Packet Length Variance,0.9805,0.0
+Init_Win_bytes_forward,0.5135,0.0
+Init_Win_bytes_backward,0.9815,0.0
+
+Mean KS: 0.6109
+
+TSTR: Trained on Synthetic, Tested on Real
+              precision    recall  f1-score   support
+
+      BENIGN       0.05      1.00      0.10      5000
+    PortScan       0.00      0.00      0.00     90694
+
+    accuracy                           0.05     95694
+   macro avg       0.03      0.50      0.05     95694
+weighted avg       0.00      0.05      0.01     95694
+
+TRTS: Trained on Real, Tested on Synthetic
+              precision    recall  f1-score   support
+
+      BENIGN       0.10      1.00      0.18      5000
+    PortScan       1.00      0.49      0.66     90694
+
+    accuracy                           0.52     95694
+   macro avg       0.55      0.75      0.42     95694
+weighted avg       0.95      0.52      0.64     95694
+
+ Failed — TSTR recall: 0.0000 (threshold: 0.55)
+ TRTS recall: 0.4936 (informational)
+Failed — saved for review to outputs/synthetic\PortScan_synthetic_REVIEW.csv
+
+
+       Total Fwd Packets  Total Length of Fwd Packets  Fwd Packet Length Max  \
+count       90694.000000                 90694.000000           90694.000000   
+mean            1.029682                     1.170641               1.136744   
+std             0.315928                     7.443117               4.581302   
+min             1.000000                     0.000000               0.000000   
+25%             1.000000                     0.000000               0.000000   
+50%             1.000000                     0.000000               0.000000   
+75%             1.000000                     1.999911               2.000019   
+max            51.000000                  1473.000122             397.000061   
+
+       Fwd Packet Length Mean  Bwd Packet Length Max  Flow Packets/s  \
+count            90694.000000           90694.000000    90694.000000   
+mean                 1.031099              10.888899       10.689250   
+std                  1.502299             159.500595        0.978805   
+min                  0.000000               0.000000        0.058816   
+25%                  0.000000               5.999852       10.289185   
+50%                  0.000000               5.999852       10.596660   
+75%                  1.999992               5.999852       11.012167   
+max                147.299988            5791.999512       13.527830   
+
+        Fwd IAT Std  Fwd IAT Min  Fwd Header Length  Bwd Header Length  \
+count  9.069400e+04      90694.0       90694.000000       90694.000000   
+mean   3.504971e+03     113069.5          32.927025          20.415651   
+std    1.264253e+05    2359140.5          11.771178           6.112869   
+min    0.000000e+00          0.0          20.000000           0.000000   
+25%    0.000000e+00          0.0          23.999987          20.000010   
+50%    0.000000e+00          0.0          40.000015          20.000010   
+75%    0.000000e+00          0.0          40.000015          20.000010   
+max    1.800000e+07   61700000.0         328.000000         296.000000   
+
+       Max Packet Length  Packet Length Mean  Packet Length Variance  \
+count       90694.000000        90694.000000            9.069400e+04   
+mean           10.930612            3.691697            3.153000e+03   
+std           159.513947           33.448200            1.039849e+05   
+min             0.000000            0.000000            0.000000e+00   
+25%             5.999852            2.000018            5.410390e+00   
+50%             5.999852            2.399984            5.410390e+00   
+75%             5.999852            3.333351            1.195981e+01   
+max          5791.999512         1161.300049            4.569349e+06   
+
+       Init_Win_bytes_forward  Init_Win_bytes_backward  
+count            90694.000000             90694.000000  
+mean             15206.791016               309.944641  
+std              14116.949219              2983.605469  
+min                 -1.000000                -1.000000  
+25%               1024.000000                -0.000243  
+50%              29200.000000                -0.000243  
+75%              29200.000000                -0.000243  
+max              64240.000000             29200.000000  
+
+Near-zero variance features:
+2 features with std < 1.0
+Total Fwd Packets              3.159277e-01
+Flow Packets/s                 9.788054e-01
+Fwd Packet Length Mean         1.502299e+00
+Fwd Packet Length Max          4.581302e+00
+Bwd Header Length              6.112869e+00
+Total Length of Fwd Packets    7.443117e+00
+Fwd Header Length              1.177118e+01
+Packet Length Mean             3.344820e+01
+Bwd Packet Length Max          1.595006e+02
+Max Packet Length              1.595139e+02
+Init_Win_bytes_backward        2.983606e+03
+Init_Win_bytes_forward         1.411695e+04
+Packet Length Variance         1.039849e+05
+Fwd IAT Std                    1.264253e+05
+Fwd IAT Min                    2.359140e+06
+dtype: float32

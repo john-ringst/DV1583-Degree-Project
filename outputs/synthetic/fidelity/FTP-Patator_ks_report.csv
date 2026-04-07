@@ -1,0 +1,41 @@
+Feature,KS statistic,p-value
+Total Fwd Packets,0.179,0.0
+Total Length of Fwd Packets,0.405,0.0
+Fwd Packet Length Max,0.2555,0.0
+Fwd Packet Length Mean,0.543,0.0
+Bwd Packet Length Max,0.676,0.0
+Flow Packets/s,0.2085,0.0
+Fwd IAT Std,0.35,0.0
+Fwd IAT Min,0.968,0.0
+Fwd Header Length,0.226,0.0
+Bwd Header Length,0.221,0.0
+Max Packet Length,0.506,0.0
+Packet Length Mean,0.557,0.0
+Packet Length Variance,0.702,0.0
+Init_Win_bytes_forward,0.318,0.0
+Init_Win_bytes_backward,0.6485,0.0
+
+Mean KS: 0.4509
+
+TSTR: Trained on Synthetic, Tested on Real
+              precision    recall  f1-score   support
+
+      BENIGN       0.72      1.00      0.84      5000
+ FTP-Patator       1.00      0.67      0.80      5931
+
+    accuracy                           0.82     10931
+   macro avg       0.86      0.83      0.82     10931
+weighted avg       0.87      0.82      0.82     10931
+
+TRTS: Trained on Real, Tested on Synthetic
+              precision    recall  f1-score   support
+
+      BENIGN       0.33      1.00      0.50      5000
+ FTP-Patator       1.00      0.66      0.79     29655
+
+    accuracy                           0.71     34655
+   macro avg       0.67      0.83      0.65     34655
+weighted avg       0.90      0.71      0.75     34655
+
+ Passed — TSTR recall: 0.6699 (threshold: 0.55)
+ TRTS recall: 0.6585 (informational)

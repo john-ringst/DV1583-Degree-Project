@@ -1,0 +1,41 @@
+Feature,KS statistic,p-value
+Total Fwd Packets,0.5675,0.0
+Total Length of Fwd Packets,0.7225,0.0
+Fwd Packet Length Max,0.812,0.0
+Fwd Packet Length Mean,0.424,0.0
+Bwd Packet Length Max,0.4345,0.0
+Flow Packets/s,0.402,0.0
+Fwd IAT Std,0.102,0.0
+Fwd IAT Min,0.815,0.0
+Fwd Header Length,0.4915,0.0
+Bwd Header Length,0.6465,0.0
+Max Packet Length,0.5215,0.0
+Packet Length Mean,0.582,0.0
+Packet Length Variance,0.737,0.0
+Init_Win_bytes_forward,0.7545,0.0
+Init_Win_bytes_backward,0.8035,0.0
+
+SSH-Patator mean KS: 0.5747
+
+TSTR: Trained on Synthetic, Tested on Real
+              precision    recall  f1-score   support
+
+      BENIGN       0.92      1.00      0.96      3219
+ SSH-Patator       1.00      0.91      0.95      3219
+
+    accuracy                           0.96      6438
+   macro avg       0.96      0.96      0.96      6438
+weighted avg       0.96      0.96      0.96      6438
+
+TRTS: Trained on Real, Tested on Synthetic
+              precision    recall  f1-score   support
+
+      BENIGN       0.62      1.00      0.76      3219
+ SSH-Patator       1.00      0.88      0.93     16095
+
+    accuracy                           0.90     19314
+   macro avg       0.81      0.94      0.85     19314
+weighted avg       0.94      0.90      0.91     19314
+
+ Passed — TSTR recall: 0.9133 (threshold: 0.55)
+ TRTS recall: 0.8757 (informational)

@@ -1,0 +1,40 @@
+Feature,KS statistic,p-value
+Total Fwd Packets,0.126,0.0
+Total Length of Fwd Packets,0.0645,0.0005
+Fwd Packet Length Max,0.1015,0.0
+Fwd Packet Length Mean,0.046,0.029
+Bwd Packet Length Max,0.309,0.0
+Flow Packets/s,0.226,0.0
+Fwd IAT Std,0.138,0.0
+Fwd IAT Min,0.8985,0.0
+Fwd Header Length,0.071,0.0001
+Bwd Header Length,0.232,0.0
+Max Packet Length,0.304,0.0
+Packet Length Mean,0.0965,0.0
+Packet Length Variance,0.0855,0.0
+Init_Win_bytes_forward,0.5485,0.0
+Init_Win_bytes_backward,0.634,0.0
+
+Mean KS: 0.2587
+
+TSTR: Trained on Synthetic, Tested on Real
+              precision    recall  f1-score   support
+
+      BENIGN       0.22      1.00      0.36      5000
+    DoS Hulk       1.00      0.89      0.94    172846
+
+    accuracy                           0.90    177846
+   macro avg       0.61      0.95      0.65    177846
+weighted avg       0.98      0.90      0.93    177846
+
+TRTS: Trained on Real, Tested on Synthetic
+              precision    recall  f1-score   support
+
+      BENIGN       0.19      1.00      0.31      5000
+    DoS Hulk       1.00      0.87      0.93    172846
+
+    accuracy                           0.88    177846
+   macro avg       0.59      0.94      0.62    177846
+weighted avg       0.98      0.88      0.92    177846
+
+ Passed — TSTR recall: 0.8949 (threshold: 0.55)
