@@ -189,6 +189,5 @@ outputs/processed/baseline.csv
 outputs/processed/baseline_dstport.csv
 
 # temp files
-02_wgan_gp.ipynb
 testingstuff_baseline.ipynb
 testingstuff_gancalls.ipynb

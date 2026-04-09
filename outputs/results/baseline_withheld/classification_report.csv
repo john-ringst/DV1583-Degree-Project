@@ -17,30 +17,3 @@ Web Attack � XSS,0.4838709677419355,0.11538461538461539,0.18633540372670807,13
 accuracy,0.9737410624524805,0.9737410624524805,0.9737410624524805,0.9737410624524805
 macro avg,0.5081391539377982,0.5294161152427882,0.5050122336522774,514263.0
 weighted avg,0.9516827650481893,0.9737410624524805,0.9622175964520061,514263.0
-
-======================================================================
-Classification Report — Baseline, withheld labels in test set
-======================================================================
-                            precision    recall  f1-score   support
-
-                    BENIGN       0.97      1.00      0.99    419012
-                       Bot       0.00      0.00      0.00      1948
-                      DDoS       1.00      1.00      1.00     25603
-             DoS GoldenEye       0.50      0.99      0.66      2057
-                  DoS Hulk       1.00      0.99      1.00     34569
-          DoS Slowhttptest       0.00      0.00      0.00      5228
-             DoS slowloris       0.00      0.00      0.00      5385
-               FTP-Patator       1.00      1.00      1.00      1186
-                Heartbleed       0.00      0.00      0.00        11
-              Infiltration       0.00      0.00      0.00        36
-                  PortScan       0.98      1.00      0.99     18139
-               SSH-Patator       1.00      0.98      0.99       644
-  Web Attack � Brute Force       0.69      0.86      0.76       294
-Web Attack � Sql Injection       0.00      0.00      0.00        21
-          Web Attack � XSS       0.48      0.12      0.19       130
-
-                  accuracy                           0.97    514263
-                 macro avg       0.51      0.53      0.51    514263
-              weighted avg       0.95      0.97      0.96    514263
-
-Report saved: outputs/results/baseline_withheld/classification_report.csv
