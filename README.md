@@ -1,7 +1,9 @@
 # DV1583 Degree Project
-How can advanced Generative Adversarial Networks (GANs), like WGAN, be used to generate
-high-quality, synthetic network traffic and attack data to improve the training and robustness of Collective Intelligence
-anomaly detection models?
+Synthetic Data Augmentation for Intrusion Detection:
+Evaluating WGAN-GP for Class Imbalance and Novel Attack Detection
+
+# Aims & Objectives
+
 
 # Dependencies (Packaged in a Conda environment):
   - python=3.12
@@ -24,4 +26,4 @@ anomaly detection models?
   Experiments run on Windows 11, GPU: Nvidia GeForce 3060 TI, CPU: Ryzen 5 5600X
 
 # Acknowledgements
-WGAN-GP implementation largely based on implementation by Gulrajani et al. (https://arxiv.org/abs/1704.00028) and Zeleni9 (https://github.com/Zeleni9/pytorch-wgan)
+WGAN-GP implementation largely based on implementation by Gulrajani et al. (https://arxiv.org/abs/1704.00028, https://github.com/igul222/improved_wgan_training) and Zeleni9 (https://github.com/Zeleni9/pytorch-wgan)
